@@ -1,0 +1,530 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VayuMitra Admin Portal | Team ASTRA</title>
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --card-bg: #121927;
+      --border-color: #1e293b;
+      --accent-color: #00e5ff;
+      --accent-alert: #ff3366;
+      --text-main: #f1f5f9;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- Authentication Overlay --- */
+    #auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 23, 0.96);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .auth-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .auth-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent-color);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .auth-card p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 4px;
+      background: #0d131f;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent-color);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--accent-color);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: auto;
+      padding: 0.5rem 1rem;
+    }
+
+    .error-msg {
+      color: var(--accent-alert);
+      font-size: 0.8rem;
+      margin-top: 0.8rem;
+      display: none;
+    }
+
+    /* --- Main Layout --- */
+    header {
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+    }
+
+    .badge {
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--accent-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      border: 1px solid var(--accent-color);
+    }
+
+    .container {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .panel-header h3 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-color);
+    }
+
+    /* Tables & Empty States */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-card .val {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .stat-card .lbl {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN AUTH GATE -->
+  <div id="auth-overlay">
+    <div class="auth-card">
+      <h2>VayuMitra Admin Portal</h2>
+      <p>Disaster Rescue System Command Layer (Restricted Access)</p>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Admin Identifier</label>
+          <input type="text" id="username" autocomplete="off" placeholder="Enter admin ID" required />
+        </div>
+        <div class="form-group">
+          <label>Security Key</label>
+          <input type="password" id="password" placeholder="Enter password" required />
+        </div>
+        <button type="submit" class="btn">Authenticate</button>
+        <p class="error-msg" id="login-error">Authentication failed. Check credentials.</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- APPLICATION HEADER -->
+  <header>
+    <div class="brand">
+      <h1>TEAM ASTRA: VAYUMITRA</h1>
+      <span class="badge">SECURE CONSOLE</span>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <span id="user-display" style="font-size: 0.85rem; color: var(--text-muted);"></span>
+      <button class="btn btn-secondary" onclick="logout()">Terminate Session</button>
+    </div>
+  </header>
+
+  <!-- DASHBOARD CONTENT (ZERO SAMPLE VALUES) -->
+  <div class="container">
+    
+    <!-- LEFT COLUMN: LIVE TELEMETRY & RESCUE LOGS -->
+    <div>
+      <!-- System Metrics -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="val" id="metric-active-drones">0</div>
+          <div class="lbl">Active Drones In Field</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="metric-signatures">0</div>
+          <div class="lbl">Thermal Heat Signatures</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="metric-pending-rescues">0</div>
+          <div class="lbl">Pending Evacuations</div>
+        </div>
+      </div>
+
+      <!-- Live Drone Registry Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Active Drone Fleet Telemetry</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Drone Call-Sign</th>
+              <th>Hardware Model</th>
+              <th>GPS Sector</th>
+              <th>Battery %</th>
+              <th>Thermal Stream</th>
+            </tr>
+          </thead>
+          <tbody id="drone-table-body">
+            <tr>
+              <td colspan="5" class="empty-state">No active drone telemetry recorded. Connect a unit below.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Victim Identification Log -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Thermal Survivor Detections (Field Coordination)</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Detection ID</th>
+              <th>Coordinates</th>
+              <th>Heat Index</th>
+              <th>Priority Level</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="victim-table-body">
+            <tr>
+              <td colspan="5" class="empty-state">No heat signatures identified. Database initialized empty.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: ADMIN DATA INPUT CONTROLS -->
+    <div>
+      <!-- Register Field Unit Form -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Deploy Field Drone</h3>
+        </div>
+        <form id="add-drone-form">
+          <div class="form-group">
+            <label>Call-Sign / Unit ID</label>
+            <input type="text" id="drone-id" required />
+          </div>
+          <div class="form-group">
+            <label>Unit Model</label>
+            <input type="text" id="drone-model" required />
+          </div>
+          <div class="form-group">
+            <label>GPS Coordinates</label>
+            <input type="text" id="drone-gps" placeholder="Lat, Long" required />
+          </div>
+          <div class="form-group">
+            <label>Battery Capacity (%)</label>
+            <input type="number" id="drone-battery" min="1" max="100" required />
+          </div>
+          <button type="submit" class="btn">Deploy Unit</button>
+        </form>
+      </div>
+
+      <!-- Add Incident / Signature Form -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Log Thermal Heat Signature</h3>
+        </div>
+        <form id="add-incident-form">
+          <div class="form-group">
+            <label>Coordinates / Location</label>
+            <input type="text" id="incident-gps" required />
+          </div>
+          <div class="form-group">
+            <label>Thermal Intensity (°C)</label>
+            <input type="text" id="incident-temp" required />
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select id="incident-priority">
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="HIGH">HIGH</option>
+              <option value="MEDIUM">MEDIUM</option>
+            </select>
+          </div>
+          <button type="submit" class="btn">Register Signal</button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // --- CREDENTIAL CONFIGURATION ---
+    const ADMIN_USER = "admin";
+    const ADMIN_PASS = "astrapassword";
+
+    // --- APPLICATION DATA STORE (INITIALIZED WITH NO SAMPLE VALUES) ---
+    let droneStore = [];
+    let incidentStore = [];
+
+    // --- AUTHENTICATION GATEWAY ---
+    function checkAuth() {
+      const isAuth = sessionStorage.getItem("vayuMitraAuth");
+      const overlay = document.getElementById("auth-overlay");
+      const userDisplay = document.getElementById("user-display");
+
+      if (isAuth === "true") {
+        overlay.style.display = "none";
+        userDisplay.innerText = "Operator: " + (sessionStorage.getItem("adminUser") || "Admin");
+      } else {
+        overlay.style.display = "flex";
+      }
+    }
+
+    document.getElementById("login-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      const errorMsg = document.getElementById("login-error");
+
+      if (user === ADMIN_USER && pass === ADMIN_PASS) {
+        sessionStorage.setItem("vayuMitraAuth", "true");
+        sessionStorage.setItem("adminUser", user);
+        errorMsg.style.display = "none";
+        checkAuth();
+      } else {
+        errorMsg.style.display = "block";
+      }
+    });
+
+    function logout() {
+      sessionStorage.removeItem("vayuMitraAuth");
+      sessionStorage.removeItem("adminUser");
+      location.reload();
+    }
+
+    // --- RENDER FUNCTIONS ---
+    function updateMetrics() {
+      document.getElementById("metric-active-drones").innerText = droneStore.length;
+      document.getElementById("metric-signatures").innerText = incidentStore.length;
+      document.getElementById("metric-pending-rescues").innerText = incidentStore.filter(i => i.status === "Pending Action").length;
+    }
+
+    function renderDrones() {
+      const tbody = document.getElementById("drone-table-body");
+      if (droneStore.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No active drone telemetry recorded. Connect a unit below.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = droneStore.map(d => `
+        <tr>
+          <td><strong>${d.id}</strong></td>
+          <td>${d.model}</td>
+          <td>${d.gps}</td>
+          <td>${d.battery}%</td>
+          <td><span class="badge">ACTIVE TRANSMISSION</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function renderIncidents() {
+      const tbody = document.getElementById("victim-table-body");
+      if (incidentStore.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No heat signatures identified. Database initialized empty.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = incidentStore.map(inc => `
+        <tr>
+          <td><strong>#${inc.id}</strong></td>
+          <td>${inc.gps}</td>
+          <td>${inc.temp}</td>
+          <td><span style="color: ${inc.priority === 'CRITICAL' ? 'var(--accent-alert)' : 'var(--accent-color)'}">${inc.priority}</span></td>
+          <td>${inc.status}</td>
+        </tr>
+      `).join("");
+    }
+
+    // --- FORM SUBMISSIONS ---
+    document.getElementById("add-drone-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const newDrone = {
+        id: document.getElementById("drone-id").value.trim(),
+        model: document.getElementById("drone-model").value.trim(),
+        gps: document.getElementById("drone-gps").value.trim(),
+        battery: document.getElementById("drone-battery").value.trim()
+      };
+      droneStore.push(newDrone);
+      this.reset();
+      renderDrones();
+      updateMetrics();
+    });
+
+    document.getElementById("add-incident-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const newIncident = {
+        id: "SIG-" + (incidentStore.length + 1).toString().padStart(3, "0"),
+        gps: document.getElementById("incident-gps").value.trim(),
+        temp: document.getElementById("incident-temp").value.trim(),
+        priority: document.getElementById("incident-priority").value,
+        status: "Pending Action"
+      };
+      incidentStore.push(newIncident);
+      this.reset();
+      renderIncidents();
+      updateMetrics();
+    });
+
+    // Run Auth Verification on load
+    checkAuth();
+  </script>
+</body>
+</html>
